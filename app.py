@@ -4,7 +4,7 @@ import asyncio
 import json
 import hashlib
 import gspread
-import time as time_module
+
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit.components.v1 as components
 from vocab_data import get_vocab
@@ -34,6 +34,10 @@ st.markdown("""<style>
     .progress-box p { color:white; margin:5px 0 0 0; font-size:14px; }
     /* Padding dưới cho bottom nav */
     .main .block-container { padding-bottom: 80px !important; }
+    /* Ẩn header bảng trên mobile */
+    @media (max-width: 768px) {
+        .table-header { display: none !important; }
+    }
 </style>""", unsafe_allow_html=True)
 
 # --- KẾT NỐI GOOGLE SHEETS ---
@@ -91,7 +95,7 @@ if "authenticated" not in st.session_state:
     st.session_state.username = ""
 
 if not st.session_state.authenticated:
-    st.title("🔐 Hệ thống Đăng nhập Lớp Học TOPIK")
+    st.title("🔐 Hệ thống Đăng nhập Lớp Học TOPIK - By Tuân")
     tab_login, tab_register = st.tabs(["Đăng Nhập 🔑", "Đăng Ký Tài Khoản Mới 📝"])
 
     with tab_login:
@@ -136,24 +140,19 @@ if not st.session_state.authenticated:
 # GIAO DIỆN HỌC (SAU KHI ĐĂNG NHẬP)
 # ==========================================
 
-# --- Timer ---
-if "study_start" not in st.session_state:
-    st.session_state.study_start = time_module.time()
-elapsed = int(time_module.time() - st.session_state.study_start)
+
 
 # --- Load data ---
 user_data = load_data(st.session_state.username)
 vocab_data = get_vocab()
 
 # --- Header ---
-c1, c2, c3, c4 = st.columns([5, 2, 2, 1.5])
+c1, c2, c3 = st.columns([6, 2.5, 1.5])
 with c1:
-    st.title("Bảng Từ Vựng TOPIK 🚀 - By Tuân")
+    st.title("Bảng Từ Vựng TOPIK - Giọng AI Chuẩn Hàn🚀- By Tuân")
 with c2:
-    st.info(f"⏱️ Đã học: **{elapsed//60}p{elapsed%60:02d}s**")
-with c3:
     st.success(f"👤 **{st.session_state.username}**")
-with c4:
+with c3:
     if st.button("Đăng xuất 👋"):
         st.session_state.authenticated = False
         st.session_state.username = ""
@@ -213,15 +212,15 @@ for idx, tab in enumerate(tabs):
             else:
                 st.caption("Chưa bắt đầu học cấp này")
 
-        # --- Header bảng ---
-        h1, h2, h3, h4, h5, h6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
-        h1.markdown("<div class='center-text'><b>STT</b></div>", unsafe_allow_html=True)
-        h2.markdown("<div class='center-text'><b>Tiếng Hàn</b></div>", unsafe_allow_html=True)
-        h3.markdown("<div class='center-text'><b>Nghĩa TV</b></div>", unsafe_allow_html=True)
-        h4.markdown("<div class='center-text'><b>Nghe</b></div>", unsafe_allow_html=True)
-        h5.markdown("<div class='center-text'><b>Ôn Tập Viết</b></div>", unsafe_allow_html=True)
-        h6.markdown("<div class='center-text'><b>Kết Quả</b></div>", unsafe_allow_html=True)
-        st.markdown("---")
+        # --- Header bảng (ẩn trên mobile) ---
+        st.markdown("""<div class='table-header' style='display:flex; gap:5px; padding:10px 0; border-bottom:2px solid #444;'>
+            <div style='flex:1; text-align:center; font-weight:bold;'>STT</div>
+            <div style='flex:1.5; text-align:center; font-weight:bold;'>Tiếng Hàn</div>
+            <div style='flex:2; text-align:center; font-weight:bold;'>Nghĩa TV</div>
+            <div style='flex:2.5; text-align:center; font-weight:bold;'>Nghe</div>
+            <div style='flex:3; text-align:center; font-weight:bold;'>Ôn Tập Viết</div>
+            <div style='flex:2; text-align:center; font-weight:bold;'>Kết Quả</div>
+        </div>""", unsafe_allow_html=True)
 
         # --- Danh sách từ ---
         for word in current_vocab:
