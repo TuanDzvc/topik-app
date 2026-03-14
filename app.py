@@ -306,7 +306,13 @@ btn.title = 'Lên đầu trang';
 btn.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:55px;height:55px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all 0.3s;';
 btn.onmouseover = function(){this.style.transform='scale(1.15)'};
 btn.onmouseout = function(){this.style.transform='scale(1)'};
-btn.onclick = function(){pdoc.querySelector('.main').scrollTo({top:0,behavior:'smooth'})};
+btn.onclick = function(){
+    var d = pdoc;
+    var el = d.querySelector('section.main') || d.querySelector('.main') || d.querySelector('[data-testid="stAppViewContainer"]');
+    if(el) el.scrollTo({top:0,behavior:'smooth'});
+    d.documentElement.scrollTo({top:0,behavior:'smooth'});
+    parent.scrollTo({top:0,behavior:'smooth'});
+};
 pdoc.body.appendChild(btn);
 </script>
 """, height=55)
