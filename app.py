@@ -139,7 +139,14 @@ if not st.session_state.authenticated:
                         st.error("❌ Mật khẩu không khớp!")
                     else:
                         save_new_user(reg_user, hash_password(reg_pass), reg_name)
-                        st.success("🎉 Đăng ký thành công! Chuyển qua tab Đăng Nhập.")
+                        st.success("🎉 Đăng ký thành công! Đang chuyển sang đăng nhập...")
+                        st.session_state.authenticated = False
+                        components.html("""<script>
+                            setTimeout(function(){
+                                var tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                                if(tabs[0]) tabs[0].click();
+                            }, 500);
+                        </script>""", height=0)
     st.stop()
 
 # ==========================================
@@ -163,7 +170,7 @@ kr_time = datetime.now(kr_tz).strftime("%H:%M")
 st.title("Bảng Từ Vựng TOPIK - Giọng AI Chuẩn Hàn🚀- By Tuân")
 c1, c2, c3, c4 = st.columns([4, 2.5, 2.5, 1.5])
 with c1:
-    st.markdown(f"### 👋 Chào mừng **{display_name}** đã quay trở lại!")
+    st.markdown(f"### 👋 Chào mừng <span style='color:#FFD700;'>{display_name}</span> đã quay trở lại!", unsafe_allow_html=True)
 with c2:
     st.info(f"🇻🇳 Việt Nam: **{vn_time}** &nbsp; | &nbsp; 🇰🇷 Hàn Quốc: **{kr_time}**")
 with c3:
@@ -276,19 +283,30 @@ for idx, tab in enumerate(tabs):
             if (el) el.scrollIntoView({{behavior:'smooth', block:'center'}});
         </script>""", height=0)
 
-# --- BOTTOM NAV BAR (luôn hiện ở dưới cùng) ---
+# --- BOTTOM NAV BAR + Nút TOP ---
 components.html("""
 <style>
 .bnav{position:fixed;bottom:0;left:0;right:0;z-index:10000;background:linear-gradient(135deg,#0e1117,#1a1a2e);padding:8px 0;display:flex;justify-content:center;gap:15px;border-top:2px solid #FFD700;box-shadow:0 -4px 15px rgba(0,0,0,0.5)}
 .bnav button{background:linear-gradient(135deg,#e67e22,#f39c12);color:#fff;border:none;padding:10px 28px;border-radius:25px;font-weight:900;font-size:14px;cursor:pointer;transition:all .3s}
 .bnav button:hover{background:linear-gradient(135deg,#d35400,#e67e22);transform:scale(1.08)}
-.top-btn{position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all .3s}
-.top-btn:hover{transform:scale(1.15);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
 </style>
 <div class="bnav">
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[0].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📗 Cấp 3</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[1].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📘 Cấp 4</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[2].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📕 Cấp 5</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[0].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📗 Cấp 3</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[1].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📘 Cấp 4</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[2].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📕 Cấp 5</button>
 </div>
-<button class="top-btn" onclick="parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})" title="Lên đầu trang">🔝</button>
+<script>
+var pdoc = parent.document;
+var old = pdoc.getElementById('topBtnFixed');
+if(old) old.remove();
+var btn = pdoc.createElement('button');
+btn.id = 'topBtnFixed';
+btn.innerHTML = '🔝';
+btn.title = 'Lên đầu trang';
+btn.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:55px;height:55px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all 0.3s;';
+btn.onmouseover = function(){this.style.transform='scale(1.15)'};
+btn.onmouseout = function(){this.style.transform='scale(1)'};
+btn.onclick = function(){pdoc.querySelector('.main').scrollTo({top:0,behavior:'smooth'})};
+pdoc.body.appendChild(btn);
+</script>
 """, height=55)
