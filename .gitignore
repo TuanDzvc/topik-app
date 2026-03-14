@@ -1,0 +1,10 @@
+# Secrets - KHÔNG BAO GIỜ PUSH LÊN GITHUB
+credentials.json
+*.json
+!package.json
+.streamlit/secrets.toml
+topik-app-*.json
+
+# Python
+__pycache__/
+*.pyc
