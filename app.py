@@ -110,7 +110,7 @@ if not st.session_state.authenticated:
                     if login_user in users_db and users_db[login_user] == hash_password(login_pass):
                         st.session_state.authenticated = True
                         st.session_state.username = login_user
-                        st.session_state.study_start = time_module.time()
+
                         st.rerun()
                     else:
                         st.error("❌ Sai tài khoản hoặc mật khẩu!")
