@@ -249,21 +249,13 @@ for idx, tab in enumerate(tabs):
                 else:
                     c6.error("SAI ❌")
 
-        # --- Nút chuyển cấp ở CUỐI mỗi tab ---
+        # --- Cuối danh sách ---
         st.markdown("---")
-        st.markdown(f"### 🎉 Hết danh sách {ten}! Chuyển sang cấp khác:")
-        nav1, nav2, nav3 = st.columns(3)
-        other_levels = [l for l in danh_sach if l != ten]
-        for nav_col, lv in zip([nav1, nav2], other_levels):
-            with nav_col:
-                if st.button(f"👉 Chuyển sang {lv}", key=f"nav_{ten}_{lv}"):
-                    # Inject JS to click target tab
-                    target_idx = danh_sach.index(lv)
-                    components.html(f"""<script>
-                        var tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
-                        if (tabs[{target_idx}]) tabs[{target_idx}].click();
-                        window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
-                    </script>""", height=0)
+        st.markdown(f"### 🎉 Hết danh sách {ten}!")
+        if st.button("🔝 Lên đầu trang", key=f"top_{ten}"):
+            components.html("""<script>
+                window.parent.scrollTo({top: 0, behavior: 'smooth'});
+            </script>""", height=0)
 
     # --- Scroll JS khi bấm "Xem học đến đâu" ---
     if scroll_clicked and last_stt > 0:
