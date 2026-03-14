@@ -4,6 +4,7 @@ import asyncio
 import json
 import hashlib
 import gspread
+from datetime import datetime, timezone, timedelta
 
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit.components.v1 as components
@@ -68,10 +69,14 @@ def hash_password(pw):
 
 def load_users_db():
     rows = sheet_users.get_all_values()
-    return {r[0]: r[1] for r in rows[1:] if len(r) >= 2}
+    db = {}
+    for r in rows[1:]:
+        if len(r) >= 2:
+            db[r[0]] = {"pw": r[1], "name": r[2] if len(r) >= 3 else r[0]}
+    return db
 
-def save_new_user(username, pw_hash):
-    sheet_users.append_row([username, pw_hash])
+def save_new_user(username, pw_hash, display_name):
+    sheet_users.append_row([username, pw_hash, display_name])
 
 def load_data(username):
     rows = sheet_progress.get_all_values()
@@ -107,10 +112,10 @@ if not st.session_state.authenticated:
             if submit_login:
                 with st.spinner('Đang kết nối... ⏳'):
                     users_db = load_users_db()
-                    if login_user in users_db and users_db[login_user] == hash_password(login_pass):
+                    if login_user in users_db and users_db[login_user]["pw"] == hash_password(login_pass):
                         st.session_state.authenticated = True
                         st.session_state.username = login_user
-
+                        st.session_state.display_name = users_db[login_user]["name"]
                         st.rerun()
                     else:
                         st.error("❌ Sai tài khoản hoặc mật khẩu!")
@@ -118,6 +123,7 @@ if not st.session_state.authenticated:
     with tab_register:
         st.subheader("Tạo tài khoản học mới")
         with st.form("register_form"):
+            reg_name = st.text_input("Họ và Tên:")
             reg_user = st.text_input("Tên tài khoản (viết liền không dấu):")
             reg_pass = st.text_input("Mật khẩu:", type="password")
             reg_pass2 = st.text_input("Nhập lại mật khẩu:", type="password")
@@ -125,14 +131,14 @@ if not st.session_state.authenticated:
             if submit_reg:
                 with st.spinner('Đang tạo tài khoản... ⏳'):
                     users_db = load_users_db()
-                    if not reg_user or not reg_pass:
+                    if not reg_user or not reg_pass or not reg_name:
                         st.warning("⚠️ Điền đầy đủ thông tin!")
                     elif reg_user in users_db:
                         st.error("❌ Tên tài khoản đã tồn tại!")
                     elif reg_pass != reg_pass2:
                         st.error("❌ Mật khẩu không khớp!")
                     else:
-                        save_new_user(reg_user, hash_password(reg_pass))
+                        save_new_user(reg_user, hash_password(reg_pass), reg_name)
                         st.success("🎉 Đăng ký thành công! Chuyển qua tab Đăng Nhập.")
     st.stop()
 
@@ -145,14 +151,24 @@ if not st.session_state.authenticated:
 # --- Load data ---
 user_data = load_data(st.session_state.username)
 vocab_data = get_vocab()
+display_name = st.session_state.get("display_name", st.session_state.username)
+
+# --- Đồng hồ VN / KR ---
+vn_tz = timezone(timedelta(hours=7))
+kr_tz = timezone(timedelta(hours=9))
+vn_time = datetime.now(vn_tz).strftime("%H:%M")
+kr_time = datetime.now(kr_tz).strftime("%H:%M")
 
 # --- Header ---
-c1, c2, c3 = st.columns([6, 2.5, 1.5])
+st.title("Bảng Từ Vựng TOPIK - Giọng AI Chuẩn Hàn🚀- By Tuân")
+c1, c2, c3, c4 = st.columns([4, 2.5, 2.5, 1.5])
 with c1:
-    st.title("Bảng Từ Vựng TOPIK - Giọng AI Chuẩn Hàn🚀- By Tuân")
+    st.markdown(f"### 👋 Chào mừng **{display_name}** đã quay trở lại!")
 with c2:
-    st.success(f"👤 **{st.session_state.username}**")
+    st.info(f"🇻🇳 Việt Nam: **{vn_time}** &nbsp; | &nbsp; 🇰🇷 Hàn Quốc: **{kr_time}**")
 with c3:
+    st.success(f"👤 **{st.session_state.username}**")
+with c4:
     if st.button("Đăng xuất 👋"):
         st.session_state.authenticated = False
         st.session_state.username = ""
