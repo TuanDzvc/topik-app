@@ -20,7 +20,7 @@ def init_gspread():
         "https://www.googleapis.com/auth/drive"
     ]
     # Lấy chìa khóa từ Két sắt bí mật của Streamlit
-    creds_dict = json.loads(st.secrets["gcp_json"])
+    creds_dict = dict(st.secrets["gcp_service_account"])
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
     sheet_users = client.open("Database_Topik").worksheet("Users")
@@ -29,7 +29,7 @@ def init_gspread():
 try:
     sheet_users, sheet_progress = init_gspread()
 except Exception as e:
-    st.error("❌ Lỗi kết nối Google Sheets! Check lại file credentials.json và quyền Share nhé.")
+    st.error(f"❌ Lỗi kết nối Google Sheets: {e}")
     st.stop()
 
 # Hàm băm mật khẩu
