@@ -237,7 +237,7 @@ for idx, tab in enumerate(tabs):
             c4.audio(audio_bytes, format='audio/mp3')
 
             saved = user_data.get(word_key, "")
-            current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed")
+            current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed", placeholder="Điền từ vựng tiếng Hàn...")
 
             if current_input != saved:
                 user_data[word_key] = current_input
@@ -252,10 +252,6 @@ for idx, tab in enumerate(tabs):
         # --- Cuối danh sách ---
         st.markdown("---")
         st.markdown(f"### 🎉 Hết danh sách {ten}!")
-        if st.button("🔝 Lên đầu trang", key=f"top_{ten}"):
-            components.html("""<script>
-                window.parent.scrollTo({top: 0, behavior: 'smooth'});
-            </script>""", height=0)
 
     # --- Scroll JS khi bấm "Xem học đến đâu" ---
     if scroll_clicked and last_stt > 0:
@@ -270,10 +266,13 @@ components.html("""
 .bnav{position:fixed;bottom:0;left:0;right:0;z-index:10000;background:linear-gradient(135deg,#0e1117,#1a1a2e);padding:8px 0;display:flex;justify-content:center;gap:15px;border-top:2px solid #FFD700;box-shadow:0 -4px 15px rgba(0,0,0,0.5)}
 .bnav button{background:linear-gradient(135deg,#e67e22,#f39c12);color:#fff;border:none;padding:10px 28px;border-radius:25px;font-weight:900;font-size:14px;cursor:pointer;transition:all .3s}
 .bnav button:hover{background:linear-gradient(135deg,#d35400,#e67e22);transform:scale(1.08)}
+.top-btn{position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all .3s}
+.top-btn:hover{transform:scale(1.15);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
 </style>
 <div class="bnav">
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[0].click();parent.scrollTo({top:0,behavior:'smooth'})">📗 Cấp 3</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[1].click();parent.scrollTo({top:0,behavior:'smooth'})">📘 Cấp 4</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[2].click();parent.scrollTo({top:0,behavior:'smooth'})">📕 Cấp 5</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[0].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📗 Cấp 3</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[1].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📘 Cấp 4</button>
+    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\'tab\']')[2].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📕 Cấp 5</button>
 </div>
+<button class="top-btn" onclick="parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})" title="Lên đầu trang">🔝</button>
 """, height=55)
