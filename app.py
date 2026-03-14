@@ -262,6 +262,7 @@ for idx, tab in enumerate(tabs):
                     components.html(f"""<script>
                         var tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
                         if (tabs[{target_idx}]) tabs[{target_idx}].click();
+                        window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
                     </script>""", height=0)
 
     # --- Scroll JS khi bấm "Xem học đến đâu" ---
