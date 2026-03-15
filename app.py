@@ -35,6 +35,8 @@ st.markdown("""<style>
     .progress-box p { color:white; margin:5px 0 0 0; font-size:14px; }
     /* Padding dưới cho bottom nav */
     .main .block-container { padding-bottom: 80px !important; }
+    /* Căn giữa nút 🔊 */
+    div[data-testid="column"]:nth-child(4) button { display:block; margin:auto; }
     /* Ẩn header bảng trên mobile */
     @media (max-width: 768px) {
         .table-header { display: none !important; }
@@ -289,31 +291,7 @@ for idx, tab in enumerate(tabs):
             # Nếu là ô cuối → bọc trong container có viền vàng + nhấp nháy
             if is_target:
                 rc = st.container(border=True)
-                rc.markdown("""<span id='hl-marker' style='color:#FFD700; font-weight:bold; font-size:16px;'>👉 Bạn đang học đến đây!</span>
-                <script>
-                    (function(){
-                        var mk = document.getElementById('hl-marker');
-                        if(!mk) return;
-                        var box = mk.closest('[data-testid="stExpander"]') || mk.closest('div[style]') || mk.parentElement.parentElement.parentElement;
-                        for(var p = mk; p; p = p.parentElement){
-                            var bs = window.getComputedStyle(p).borderStyle;
-                            if(bs && bs !== 'none'){
-                                box = p; break;
-                            }
-                        }
-                        if(!box) return;
-                        box.style.borderColor = '#FFD700';
-                        box.style.borderWidth = '3px';
-                        box.style.background = 'rgba(255,215,0,0.1)';
-                        box.style.transition = 'box-shadow 0.3s';
-                        var on = true;
-                        var iv = setInterval(function(){
-                            box.style.boxShadow = on ? '0 0 20px 8px rgba(255,215,0,0.6)' : 'none';
-                            on = !on;
-                        }, 400);
-                        setTimeout(function(){ clearInterval(iv); box.style.boxShadow=''; }, 5000);
-                    })();
-                </script>""", unsafe_allow_html=True)
+                rc.markdown("<span id='hl-target' style='color:#FFD700; font-weight:bold; font-size:16px;'>👉 Bạn đang học đến đây!</span>", unsafe_allow_html=True)
                 c1, c2, c3, c4, c5, c6 = rc.columns([1, 1.5, 2, 2.5, 3, 2])
             else:
                 c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
@@ -322,7 +300,6 @@ for idx, tab in enumerate(tabs):
             c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
 
-            c4.markdown("<div style='text-align:center'>", unsafe_allow_html=True)
             if c4.button("🔊", key=f"play_{word_key}"):
                 try:
                     ab = get_audio_bytes(word["kr"], voice_code)
@@ -363,6 +340,33 @@ for idx, tab in enumerate(tabs):
             var el = window.parent.document.getElementById('word_{ten}_{last_stt}');
             if(el) el.scrollIntoView({{behavior:'smooth', block:'center'}});
         </script>""", height=0)
+
+# --- Nhấp nháy viền vàng cho ô đang học + căn giữa nút loa ---
+components.html("""<script>
+var pdoc = window.parent.document;
+// Nhấp nháy viền vàng
+var mk = pdoc.getElementById('hl-target');
+if(mk){
+    var box = mk;
+    for(var p = mk; p; p = p.parentElement){
+        var bs = window.getComputedStyle(p).borderStyle;
+        if(bs && bs !== 'none' && bs !== 'initial'){
+            box = p; break;
+        }
+    }
+    if(box && box !== mk){
+        box.style.borderColor = '#FFD700';
+        box.style.borderWidth = '3px';
+        box.style.background = 'rgba(255,215,0,0.12)';
+        var on = true;
+        var iv = setInterval(function(){
+            box.style.boxShadow = on ? '0 0 25px 10px rgba(255,215,0,0.5)' : 'none';
+            on = !on;
+        }, 400);
+        setTimeout(function(){ clearInterval(iv); box.style.boxShadow='none'; }, 5000);
+    }
+}
+</script>""", height=0)
 
 # --- Cập nhật tiến độ real-time (sau khi xử lý hết từ) ---
 with progress_area.container():
