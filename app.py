@@ -289,14 +289,15 @@ for idx, tab in enumerate(tabs):
             c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
 
-            try:
-                audio_bytes = get_audio_bytes(word["kr"], voice_code)
-                if audio_bytes and len(audio_bytes) > 100:
-                    c4.audio(audio_bytes, format='audio/mp3')
-                else:
-                    c4.write("🔇")
-            except:
-                c4.write("🔇")
+            if c4.button("🔊", key=f"play_{word_key}"):
+                try:
+                    ab = get_audio_bytes(word["kr"], voice_code)
+                    if ab and len(ab) > 100:
+                        c4.audio(ab, format='audio/mp3', autoplay=True)
+                    else:
+                        c4.warning("🔇")
+                except:
+                    c4.warning("🔇")
 
             saved = user_data.get(word_key, "")
             current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed", placeholder="Điền từ vựng tiếng Hàn...")
@@ -315,9 +316,10 @@ for idx, tab in enumerate(tabs):
         # --- Nút "Xem thêm" hoặc "Hết danh sách" ---
         st.markdown("---")
         if show_count < total_words:
-            if st.button(f"⬇️ Xem thêm {min(WORDS_PER_PAGE, total_words - show_count)} từ nữa", key=f"more_{ten}"):
-                st.session_state[show_key] = show_count + WORDS_PER_PAGE
-                st.rerun()
+            remaining = min(WORDS_PER_PAGE, total_words - show_count)
+            def load_more(key=show_key, cnt=show_count):
+                st.session_state[key] = cnt + WORDS_PER_PAGE
+            st.button(f"⬇️ Xem thêm {remaining} từ nữa", key=f"more_{ten}", on_click=load_more)
         else:
             st.markdown(f"### 🎉 Hết danh sách {ten}!")
 
