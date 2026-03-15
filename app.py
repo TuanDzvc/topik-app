@@ -328,28 +328,30 @@ for idx, tab in enumerate(tabs):
         components.html(f"""
         <script>
             var pdoc = window.parent.document;
-            // Inject CSS animation
-            var existStyle = pdoc.getElementById('blinkStyle');
-            if(!existStyle){{
+            // Inject CSS
+            if(!pdoc.getElementById('blinkCSS')){{
                 var s = pdoc.createElement('style');
-                s.id = 'blinkStyle';
-                s.textContent = '@keyframes rowBlink {{ 0%,100%{{outline-color:transparent;box-shadow:none}} 50%{{outline-color:#FFD700;box-shadow:0 0 20px 5px rgba(255,215,0,0.6)}} }}';
+                s.id = 'blinkCSS';
+                s.textContent = '@keyframes rowBlink {{ 0%,100%{{box-shadow:0 0 0 transparent}} 50%{{box-shadow:0 0 25px 8px rgba(255,215,0,0.7)}} }} .highlight-row {{ animation:rowBlink 0.6s ease-in-out 8; outline:3px solid #FFD700; border-radius:12px; }}';
                 pdoc.head.appendChild(s);
             }}
+            // Xóa highlight cũ
+            pdoc.querySelectorAll('.highlight-row').forEach(function(e){{ e.classList.remove('highlight-row'); e.style.outline=''; }});
+            
             var el = pdoc.getElementById('word_{ten}_{last_stt}');
             if (el) {{
                 el.scrollIntoView({{behavior:'smooth', block:'center'}});
-                // Tìm hàng columns (div tiếp theo chứa data-testid hoặc div con)
-                var sibling = el.nextElementSibling;
-                // Duyệt qua 3 elements tiếp theo (columns row + maybe more)
-                for(var i=0; i<3 && sibling; i++){{
-                    sibling.style.outline = '3px solid #FFD700';
-                    sibling.style.borderRadius = '12px';
-                    sibling.style.animation = 'rowBlink 0.7s ease-in-out 6';
-                    (function(s){{
-                        setTimeout(function(){{ s.style.outline=''; s.style.animation=''; s.style.borderRadius=''; }}, 5000);
-                    }})(sibling);
-                    sibling = sibling.nextElementSibling;
+                // Đi lên container cha rồi tìm hàng columns kế tiếp
+                var container = el.closest('[data-testid="stVerticalBlock"]') ? el.parentElement : el.parentElement;
+                var next = container.nextElementSibling;
+                // Tìm div chứa columns (stHorizontalBlock)
+                for(var i=0; i<5 && next; i++){{
+                    if(next.querySelector('[data-testid="column"]') || next.getAttribute('data-testid')==='stHorizontalBlock'){{
+                        next.classList.add('highlight-row');
+                        setTimeout(function(){{ next.classList.remove('highlight-row'); next.style.outline=''; }}, 5000);
+                        break;
+                    }}
+                    next = next.nextElementSibling;
                 }}
             }}
         </script>""", height=0)
