@@ -105,20 +105,26 @@ if not st.session_state.authenticated:
 
     with tab_login:
         st.subheader("Chào mừng trở lại!")
+
+        def do_login():
+            users_db = load_users_db()
+            u = st.session_state.get("_login_user", "")
+            p = st.session_state.get("_login_pass", "")
+            if u in users_db and users_db[u]["pw"] == hash_password(p):
+                st.session_state.authenticated = True
+                st.session_state.username = u
+                st.session_state.display_name = users_db[u]["name"]
+                st.session_state._login_error = False
+            else:
+                st.session_state._login_error = True
+
         with st.form("login_form"):
-            login_user = st.text_input("Tài khoản:")
-            login_pass = st.text_input("Mật khẩu:", type="password")
-            submit_login = st.form_submit_button("Vào Học 🚀")
-            if submit_login:
-                with st.spinner('Đang kết nối... ⏳'):
-                    users_db = load_users_db()
-                    if login_user in users_db and users_db[login_user]["pw"] == hash_password(login_pass):
-                        st.session_state.authenticated = True
-                        st.session_state.username = login_user
-                        st.session_state.display_name = users_db[login_user]["name"]
-                        st.rerun()
-                    else:
-                        st.error("❌ Sai tài khoản hoặc mật khẩu!")
+            st.text_input("Tài khoản:", key="_login_user")
+            st.text_input("Mật khẩu:", type="password", key="_login_pass")
+            st.form_submit_button("Vào Học 🚀", on_click=do_login)
+
+        if st.session_state.get("_login_error"):
+            st.error("❌ Sai tài khoản hoặc mật khẩu!")
 
     with tab_register:
         st.subheader("Tạo tài khoản học mới")
@@ -179,10 +185,11 @@ with c2:
 with c3:
     st.success(f"👤 **{st.session_state.username}**")
 with c4:
-    if st.button("Đăng xuất 👋"):
+    def do_logout():
         st.session_state.authenticated = False
         st.session_state.username = ""
-        st.rerun()
+        st.session_state.display_name = ""
+    st.button("Đăng xuất 👋", on_click=do_logout)
 
 # --- Tiến độ tổng quan ---
 pc1, pc2, pc3 = st.columns(3)
