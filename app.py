@@ -99,6 +99,20 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.username = ""
 
+# --- Khôi phục session từ URL (fix Safari iOS mất WebSocket) ---
+if not st.session_state.authenticated:
+    params = st.query_params
+    if "user" in params:
+        saved_user = params["user"]
+        try:
+            users_db = load_users_db()
+            if saved_user in users_db:
+                st.session_state.authenticated = True
+                st.session_state.username = saved_user
+                st.session_state.display_name = users_db[saved_user]["name"]
+        except:
+            pass
+
 if not st.session_state.authenticated:
     st.title("🔐 Hệ thống Đăng nhập Lớp Học TOPIK - By Tuân")
     tab_login, tab_register = st.tabs(["Đăng Nhập 🔑", "Đăng Ký Tài Khoản Mới 📝"])
@@ -115,6 +129,7 @@ if not st.session_state.authenticated:
                 st.session_state.username = u
                 st.session_state.display_name = users_db[u]["name"]
                 st.session_state._login_error = False
+                st.query_params["user"] = u
             else:
                 st.session_state._login_error = True
 
@@ -189,6 +204,7 @@ with c4:
         st.session_state.authenticated = False
         st.session_state.username = ""
         st.session_state.display_name = ""
+        st.query_params.clear()
     st.button("Đăng xuất 👋", on_click=do_logout)
 
 # --- Tiến độ tổng quan ---
