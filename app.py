@@ -176,8 +176,11 @@ if not st.session_state.authenticated:
 
 
 
-# --- Load data ---
-user_data = load_data(st.session_state.username)
+# --- Load data (cache trong session_state để giảm delay) ---
+if "user_data" not in st.session_state or st.session_state.get("_data_user") != st.session_state.username:
+    st.session_state.user_data = load_data(st.session_state.username)
+    st.session_state._data_user = st.session_state.username
+user_data = st.session_state.user_data
 vocab_data = get_vocab()
 display_name = st.session_state.get("display_name", st.session_state.username)
 
@@ -207,17 +210,8 @@ with c4:
         st.query_params.clear()
     st.button("Đăng xuất 👋", on_click=do_logout)
 
-# --- Tiến độ tổng quan ---
-pc1, pc2, pc3 = st.columns(3)
-for col, level_name in zip([pc1, pc2, pc3], ["Cấp 3", "Cấp 4", "Cấp 5"]):
-    words = vocab_data[level_name]
-    done = sum(1 for w in words if user_data.get(f"{level_name}_{w['stt']}", "").strip())
-    pct = int(done / len(words) * 100) if words else 0
-    with col:
-        st.markdown(f"""<div class="progress-box">
-            <h3>{level_name}</h3>
-            <p>✅ {done}/{len(words)} từ ({pct}%)</p>
-        </div>""", unsafe_allow_html=True)
+# --- Tiến độ tổng quan (placeholder - cập nhật real-time ở dưới) ---
+progress_area = st.empty()
 
 st.divider()
 
@@ -238,6 +232,7 @@ voice_code = "ko-KR-SunHiNeural" if "Nữ" in voice_opt else "ko-KR-InJoonNeural
 st.divider()
 
 # --- TABS ---
+WORDS_PER_PAGE = 20
 danh_sach = list(vocab_data.keys())
 tabs = st.tabs(danh_sach)
 
@@ -245,21 +240,27 @@ for idx, tab in enumerate(tabs):
     with tab:
         ten = danh_sach[idx]
         current_vocab = vocab_data[ten]
+        total_words = len(current_vocab)
+        total_pages = (total_words + WORDS_PER_PAGE - 1) // WORDS_PER_PAGE
 
-        # --- Nút "Xem học đến đâu" ---
+        # --- Nút "Xem học đến đâu" + chọn trang ---
         last_stt = 0
         for w in current_vocab:
             if user_data.get(f"{ten}_{w['stt']}", "").strip():
                 last_stt = w['stt']
 
-        btn_col1, btn_col2 = st.columns([1, 5])
+        btn_col1, btn_col2, btn_col3 = st.columns([1.5, 3, 2])
         with btn_col1:
             scroll_clicked = st.button(f"📍 Học đến đâu?", key=f"scroll_{ten}")
         with btn_col2:
             if last_stt > 0:
-                st.caption(f"Đã học đến từ **#{last_stt}** / {len(current_vocab)}")
+                st.caption(f"Đã học đến từ **#{last_stt}** / {total_words}")
             else:
                 st.caption("Chưa bắt đầu học cấp này")
+        with btn_col3:
+            page = st.number_input(f"📄 Trang (1-{total_pages})", min_value=1, max_value=total_pages, value=1, key=f"page_{ten}")
+
+        st.caption(f"📄 Trang **{page}** / {total_pages} — hiện từ {(page-1)*WORDS_PER_PAGE+1} đến {min(page*WORDS_PER_PAGE, total_words)}")
 
         # --- Header bảng (ẩn trên mobile) ---
         st.markdown("""<div class='table-header' style='display:flex; gap:5px; padding:10px 0; border-bottom:2px solid #444;'>
@@ -271,10 +272,13 @@ for idx, tab in enumerate(tabs):
             <div style='flex:2; text-align:center; font-weight:bold;'>Kết Quả</div>
         </div>""", unsafe_allow_html=True)
 
-        # --- Danh sách từ ---
-        for word in current_vocab:
+        # --- Danh sách từ (PHÂN TRANG - chỉ load 20 từ) ---
+        start_idx = (page - 1) * WORDS_PER_PAGE
+        end_idx = min(start_idx + WORDS_PER_PAGE, total_words)
+        page_vocab = current_vocab[start_idx:end_idx]
+
+        for word in page_vocab:
             word_key = f"{ten}_{word['stt']}"
-            # Anchor HTML để scroll tới
             st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
 
             c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
@@ -290,6 +294,7 @@ for idx, tab in enumerate(tabs):
 
             if current_input != saved:
                 user_data[word_key] = current_input
+                st.session_state.user_data = user_data
                 save_data(st.session_state.username, user_data)
 
             if current_input:
@@ -298,16 +303,33 @@ for idx, tab in enumerate(tabs):
                 else:
                     c6.error("SAI ❌")
 
-        # --- Cuối danh sách ---
+        # --- Cuối trang ---
         st.markdown("---")
-        st.markdown(f"### 🎉 Hết danh sách {ten}!")
+        if page >= total_pages:
+            st.markdown(f"### 🎉 Hết danh sách {ten}!")
+        else:
+            st.caption(f"👉 Chuyển sang **trang {page+1}** để tiếp tục học")
 
     # --- Scroll JS khi bấm "Xem học đến đâu" ---
     if scroll_clicked and last_stt > 0:
+        target_page = (last_stt - 1) // WORDS_PER_PAGE + 1
         components.html(f"""<script>
             var el = window.parent.document.getElementById('word_{ten}_{last_stt}');
             if (el) el.scrollIntoView({{behavior:'smooth', block:'center'}});
         </script>""", height=0)
+
+# --- Cập nhật tiến độ real-time (sau khi xử lý hết từ) ---
+with progress_area.container():
+    pc1, pc2, pc3 = st.columns(3)
+    for col, level_name in zip([pc1, pc2, pc3], ["Cấp 3", "Cấp 4", "Cấp 5"]):
+        words = vocab_data[level_name]
+        done = sum(1 for w in words if user_data.get(f"{level_name}_{w['stt']}", "").strip())
+        pct = int(done / len(words) * 100) if words else 0
+        with col:
+            st.markdown(f"""<div class="progress-box">
+                <h3>{level_name}</h3>
+                <p>✅ {done}/{len(words)} từ ({pct}%)</p>
+            </div>""", unsafe_allow_html=True)
 
 # --- BOTTOM NAV BAR + Nút TOP ---
 components.html("""
