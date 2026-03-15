@@ -246,13 +246,13 @@ for idx, tab in enumerate(tabs):
         total_words = len(current_vocab)
         total_pages = (total_words + WORDS_PER_PAGE - 1) // WORDS_PER_PAGE
 
-        # --- Nút "Xem học đến đâu" + chọn trang ---
+        # --- Nút "Xem học đến đâu" ---
         last_stt = 0
         for w in current_vocab:
             if user_data.get(f"{ten}_{w['stt']}", "").strip():
                 last_stt = w['stt']
 
-        btn_col1, btn_col2, btn_col3 = st.columns([1.5, 3, 2])
+        btn_col1, btn_col2 = st.columns([1, 5])
         with btn_col1:
             scroll_clicked = st.button(f"📍 Học đến đâu?", key=f"scroll_{ten}")
         with btn_col2:
@@ -260,10 +260,14 @@ for idx, tab in enumerate(tabs):
                 st.caption(f"Đã học đến từ **#{last_stt}** / {total_words}")
             else:
                 st.caption("Chưa bắt đầu học cấp này")
-        with btn_col3:
-            page = st.number_input(f"📄 Trang (1-{total_pages})", min_value=1, max_value=total_pages, value=1, key=f"page_{ten}")
 
-        st.caption(f"📄 Trang **{page}** / {total_pages} — hiện từ {(page-1)*WORDS_PER_PAGE+1} đến {min(page*WORDS_PER_PAGE, total_words)}")
+        # --- Số từ hiển thị (load thêm dần) ---
+        show_key = f"_show_{ten}"
+        if show_key not in st.session_state:
+            st.session_state[show_key] = WORDS_PER_PAGE
+        show_count = min(st.session_state[show_key], total_words)
+
+        st.caption(f"Đang hiện **{show_count}** / {total_words} từ")
 
         # --- Header bảng (ẩn trên mobile) ---
         st.markdown("""<div class='table-header' style='display:flex; gap:5px; padding:10px 0; border-bottom:2px solid #444;'>
@@ -275,12 +279,8 @@ for idx, tab in enumerate(tabs):
             <div style='flex:2; text-align:center; font-weight:bold;'>Kết Quả</div>
         </div>""", unsafe_allow_html=True)
 
-        # --- Danh sách từ (PHÂN TRANG - chỉ load 20 từ) ---
-        start_idx = (page - 1) * WORDS_PER_PAGE
-        end_idx = min(start_idx + WORDS_PER_PAGE, total_words)
-        page_vocab = current_vocab[start_idx:end_idx]
-
-        for word in page_vocab:
+        # --- Danh sách từ (chỉ hiện show_count từ) ---
+        for word in current_vocab[:show_count]:
             word_key = f"{ten}_{word['stt']}"
             st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
 
@@ -312,12 +312,14 @@ for idx, tab in enumerate(tabs):
                 else:
                     c6.error("SAI ❌")
 
-        # --- Cuối trang ---
+        # --- Nút "Xem thêm" hoặc "Hết danh sách" ---
         st.markdown("---")
-        if page >= total_pages:
-            st.markdown(f"### 🎉 Hết danh sách {ten}!")
+        if show_count < total_words:
+            if st.button(f"⬇️ Xem thêm {min(WORDS_PER_PAGE, total_words - show_count)} từ nữa", key=f"more_{ten}"):
+                st.session_state[show_key] = show_count + WORDS_PER_PAGE
+                st.rerun()
         else:
-            st.caption(f"👉 Chuyển sang **trang {page+1}** để tiếp tục học")
+            st.markdown(f"### 🎉 Hết danh sách {ten}!")
 
     # --- Scroll JS khi bấm "Xem học đến đâu" ---
     if scroll_clicked and last_stt > 0:
