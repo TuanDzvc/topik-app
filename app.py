@@ -403,7 +403,7 @@ var activeIdx = -1;
 for(var i=0;i<allTabs.length;i++){
     if(allTabs[i].getAttribute('aria-selected')==='true') activeIdx=i;
 }
-var labels = ['\ud83d\udcd7 C\u1ea5p 3','\ud83d\udcd8 C\u1ea5p 4','\ud83d\udcd5 C\u1ea5p 5'];
+var labels = ['📗 Cấp 3','📘 Cấp 4','📕 Cấp 5'];
 var bar = document.getElementById('bnavBar');
 for(var i=0;i<3;i++){
     if(i===activeIdx) continue;
@@ -426,8 +426,8 @@ var old = pdoc.getElementById('topBtnFixed');
 if(old) old.remove();
 var btn = pdoc.createElement('button');
 btn.id = 'topBtnFixed';
-btn.innerHTML = '\ud83d\udd1d';
-btn.title = 'L\u00ean \u0111\u1ea7u trang';
+btn.innerHTML = '🔝';
+btn.title = 'Lên đầu trang';
 btn.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:55px;height:55px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all 0.3s;';
 btn.onmouseover = function(){this.style.transform='scale(1.15)'};
 btn.onmouseout = function(){this.style.transform='scale(1)'};
