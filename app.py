@@ -328,30 +328,30 @@ for idx, tab in enumerate(tabs):
         components.html(f"""
         <script>
             var pdoc = window.parent.document;
-            // Inject CSS
-            if(!pdoc.getElementById('blinkCSS')){{
+            // CSS nhấp nháy
+            if(!pdoc.getElementById('hlCSS')){{
                 var s = pdoc.createElement('style');
-                s.id = 'blinkCSS';
-                s.textContent = '@keyframes rowBlink {{ 0%,100%{{box-shadow:0 0 0 transparent}} 50%{{box-shadow:0 0 25px 8px rgba(255,215,0,0.7)}} }} .highlight-row {{ animation:rowBlink 0.6s ease-in-out 8; outline:3px solid #FFD700; border-radius:12px; }}';
+                s.id = 'hlCSS';
+                s.textContent = '@keyframes hl {{ 0%,100%{{background:transparent}} 50%{{background:rgba(255,215,0,0.3)}} }} .word-hl {{animation:hl 0.5s ease 8 !important; outline:3px solid #FFD700 !important; border-radius:10px !important;}}';
                 pdoc.head.appendChild(s);
             }}
-            // Xóa highlight cũ
-            pdoc.querySelectorAll('.highlight-row').forEach(function(e){{ e.classList.remove('highlight-row'); e.style.outline=''; }});
+            // Xóa cũ
+            pdoc.querySelectorAll('.word-hl').forEach(function(e){{e.classList.remove('word-hl')}});
             
             var el = pdoc.getElementById('word_{ten}_{last_stt}');
-            if (el) {{
-                el.scrollIntoView({{behavior:'smooth', block:'center'}});
-                // Đi lên container cha rồi tìm hàng columns kế tiếp
-                var container = el.closest('[data-testid="stVerticalBlock"]') ? el.parentElement : el.parentElement;
-                var next = container.nextElementSibling;
-                // Tìm div chứa columns (stHorizontalBlock)
-                for(var i=0; i<5 && next; i++){{
-                    if(next.querySelector('[data-testid="column"]') || next.getAttribute('data-testid')==='stHorizontalBlock'){{
-                        next.classList.add('highlight-row');
-                        setTimeout(function(){{ next.classList.remove('highlight-row'); next.style.outline=''; }}, 5000);
-                        break;
-                    }}
-                    next = next.nextElementSibling;
+            if(el){{
+                // Thử nhiều cấp parent để tìm container
+                var p = el;
+                for(var u=0; u<5; u++) {{ if(p.parentElement) p = p.parentElement; }}
+                // p giờ là container cao nhất, tìm sibling
+                var row = el.parentElement.parentElement.nextElementSibling;
+                if(!row) row = el.parentElement.nextElementSibling;
+                if(row){{
+                    row.classList.add('word-hl');
+                    row.scrollIntoView({{behavior:'smooth', block:'center'}});
+                    setTimeout(function(){{row.classList.remove('word-hl')}}, 5000);
+                }} else {{
+                    el.scrollIntoView({{behavior:'smooth', block:'center'}});
                 }}
             }}
         </script>""", height=0)
