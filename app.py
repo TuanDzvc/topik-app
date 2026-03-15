@@ -36,7 +36,8 @@ st.markdown("""<style>
     /* Padding dưới cho bottom nav */
     .main .block-container { padding-bottom: 80px !important; }
     /* Căn giữa nút 🔊 */
-    div[data-testid="column"]:nth-child(4) button { display:block; margin:auto; }
+    div[data-testid="column"]:nth-child(4) .stButton { text-align:center !important; }
+    div[data-testid="column"]:nth-child(4) button { margin:0 auto !important; display:block !important; }
     /* Ẩn header bảng trên mobile */
     @media (max-width: 768px) {
         .table-header { display: none !important; }
@@ -344,7 +345,6 @@ for idx, tab in enumerate(tabs):
 # --- Nhấp nháy viền vàng cho ô đang học + căn giữa nút loa ---
 components.html("""<script>
 var pdoc = window.parent.document;
-// Nhấp nháy viền vàng
 var mk = pdoc.getElementById('hl-target');
 if(mk){
     var box = mk;
@@ -363,7 +363,14 @@ if(mk){
             box.style.boxShadow = on ? '0 0 25px 10px rgba(255,215,0,0.5)' : 'none';
             on = !on;
         }, 400);
-        setTimeout(function(){ clearInterval(iv); box.style.boxShadow='none'; }, 5000);
+        setTimeout(function(){
+            clearInterval(iv);
+            box.style.boxShadow = 'none';
+            box.style.borderColor = '';
+            box.style.borderWidth = '';
+            box.style.background = '';
+            mk.style.display = 'none';
+        }, 5000);
     }
 }
 </script>""", height=0)
