@@ -254,7 +254,7 @@ for idx, tab in enumerate(tabs):
 
         btn_col1, btn_col2 = st.columns([1, 5])
         with btn_col1:
-            scroll_clicked = st.button(f"📍 Học đến đâu?", key=f"scroll_{ten}")
+            scroll_clicked = st.button(f"📍 Học đến đâu rồi?", key=f"scroll_{ten}")
         with btn_col2:
             if last_stt > 0:
                 st.caption(f"Đã học đến từ **#{last_stt}** / {total_words}")
@@ -286,10 +286,34 @@ for idx, tab in enumerate(tabs):
 
             st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
 
-            # Nếu là ô cuối → bọc trong container có viền vàng
+            # Nếu là ô cuối → bọc trong container có viền vàng + nhấp nháy
             if is_target:
                 rc = st.container(border=True)
-                rc.markdown("<span style='color:#FFD700; font-weight:bold; font-size:16px;'>👉 Bạn đang học đến đây!</span>", unsafe_allow_html=True)
+                rc.markdown("""<span id='hl-marker' style='color:#FFD700; font-weight:bold; font-size:16px;'>👉 Bạn đang học đến đây!</span>
+                <script>
+                    (function(){
+                        var mk = document.getElementById('hl-marker');
+                        if(!mk) return;
+                        var box = mk.closest('[data-testid="stExpander"]') || mk.closest('div[style]') || mk.parentElement.parentElement.parentElement;
+                        for(var p = mk; p; p = p.parentElement){
+                            var bs = window.getComputedStyle(p).borderStyle;
+                            if(bs && bs !== 'none'){
+                                box = p; break;
+                            }
+                        }
+                        if(!box) return;
+                        box.style.borderColor = '#FFD700';
+                        box.style.borderWidth = '3px';
+                        box.style.background = 'rgba(255,215,0,0.1)';
+                        box.style.transition = 'box-shadow 0.3s';
+                        var on = true;
+                        var iv = setInterval(function(){
+                            box.style.boxShadow = on ? '0 0 20px 8px rgba(255,215,0,0.6)' : 'none';
+                            on = !on;
+                        }, 400);
+                        setTimeout(function(){ clearInterval(iv); box.style.boxShadow=''; }, 5000);
+                    })();
+                </script>""", unsafe_allow_html=True)
                 c1, c2, c3, c4, c5, c6 = rc.columns([1, 1.5, 2, 2.5, 3, 2])
             else:
                 c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
@@ -298,6 +322,7 @@ for idx, tab in enumerate(tabs):
             c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
 
+            c4.markdown("<div style='text-align:center'>", unsafe_allow_html=True)
             if c4.button("🔊", key=f"play_{word_key}"):
                 try:
                     ab = get_audio_bytes(word["kr"], voice_code)
