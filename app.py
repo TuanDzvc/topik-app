@@ -284,42 +284,53 @@ for idx, tab in enumerate(tabs):
             word_key = f"{ten}_{word['stt']}"
             is_target = scroll_clicked and word['stt'] == last_stt
 
-            # Highlight hàng cuối đã học
+            st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
+
+            # Nếu là ô cuối → bọc trong container có viền vàng
             if is_target:
-                st.markdown(f"""<div id='word_{word_key}' style='border:3px solid #FFD700; border-radius:12px; padding:8px; background:rgba(255,215,0,0.15); margin:4px 0;'>
-                    <span style='color:#FFD700; font-weight:bold;'>👉 Bạn đang học đến đây!</span>
-                </div>""", unsafe_allow_html=True)
+                row_container = st.container(border=True)
+                # Inject CSS viền vàng cho container
+                st.markdown("""<style>
+                    div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stHorizontalBlock"]) {
+                        border-color: #FFD700 !important;
+                        background: rgba(255,215,0,0.1) !important;
+                        border-width: 3px !important;
+                    }
+                </style>""", unsafe_allow_html=True)
             else:
-                st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
+                row_container = st
 
-            c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
-            c1.markdown(f"<div class='center-text'>{word['stt']}</div>", unsafe_allow_html=True)
-            c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
-            c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
+            with row_container:
+                if is_target:
+                    st.markdown("<span style='color:#FFD700; font-weight:bold;'>👉 Bạn đang học đến đây!</span>", unsafe_allow_html=True)
+                c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
+                c1.markdown(f"<div class='center-text'>{word['stt']}</div>", unsafe_allow_html=True)
+                c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
+                c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
 
-            if c4.button("🔊", key=f"play_{word_key}"):
-                try:
-                    ab = get_audio_bytes(word["kr"], voice_code)
-                    if ab and len(ab) > 100:
-                        c4.audio(ab, format='audio/mp3', autoplay=True)
-                    else:
+                if c4.button("🔊", key=f"play_{word_key}"):
+                    try:
+                        ab = get_audio_bytes(word["kr"], voice_code)
+                        if ab and len(ab) > 100:
+                            c4.audio(ab, format='audio/mp3', autoplay=True)
+                        else:
+                            c4.warning("🔇")
+                    except:
                         c4.warning("🔇")
-                except:
-                    c4.warning("🔇")
 
-            saved = user_data.get(word_key, "")
-            current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed", placeholder="Điền từ vựng tiếng Hàn...")
+                saved = user_data.get(word_key, "")
+                current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed", placeholder="Điền từ vựng tiếng Hàn...")
 
-            if current_input != saved:
-                user_data[word_key] = current_input
-                st.session_state.user_data = user_data
-                save_data(st.session_state.username, user_data)
+                if current_input != saved:
+                    user_data[word_key] = current_input
+                    st.session_state.user_data = user_data
+                    save_data(st.session_state.username, user_data)
 
-            if current_input:
-                if current_input.strip() == word["kr"]:
-                    c6.success("🔥 CHUẨN CMNR")
-                else:
-                    c6.error("SAI ❌")
+                if current_input:
+                    if current_input.strip() == word["kr"]:
+                        c6.success("🔥 CHUẨN CMNR")
+                    else:
+                        c6.error("SAI ❌")
 
         # --- Nút "Xem thêm" hoặc "Hết danh sách" ---
         st.markdown("---")
