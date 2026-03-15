@@ -326,22 +326,30 @@ for idx, tab in enumerate(tabs):
     # --- Scroll JS khi bấm "Xem học đến đâu" + highlight nhấp nháy ---
     if scroll_clicked and last_stt > 0:
         components.html(f"""
-        <style>
-        @keyframes blink-border {{ 0%,100%{{box-shadow:0 0 0px transparent}} 50%{{box-shadow:0 0 15px 5px #FFD700}} }}
-        </style>
         <script>
-            var el = window.parent.document.getElementById('word_{ten}_{last_stt}');
+            var pdoc = window.parent.document;
+            // Inject CSS animation
+            var existStyle = pdoc.getElementById('blinkStyle');
+            if(!existStyle){{
+                var s = pdoc.createElement('style');
+                s.id = 'blinkStyle';
+                s.textContent = '@keyframes rowBlink {{ 0%,100%{{outline-color:transparent;box-shadow:none}} 50%{{outline-color:#FFD700;box-shadow:0 0 20px 5px rgba(255,215,0,0.6)}} }}';
+                pdoc.head.appendChild(s);
+            }}
+            var el = pdoc.getElementById('word_{ten}_{last_stt}');
             if (el) {{
                 el.scrollIntoView({{behavior:'smooth', block:'center'}});
-                el.style.animation = 'blink-border 0.6s ease-in-out 5';
-                var style = window.parent.document.createElement('style');
-                style.textContent = '@keyframes blink-border {{ 0%,100%{{box-shadow:0 0 0px transparent}} 50%{{box-shadow:0 0 20px 8px #FFD700}} }}';
-                window.parent.document.head.appendChild(style);
-                var row = el.nextElementSibling;
-                if(row) {{
-                    row.style.animation = 'blink-border 0.6s ease-in-out 5';
-                    row.style.borderRadius = '10px';
-                    setTimeout(function(){{ row.style.animation=''; }}, 4000);
+                // Tìm hàng columns (div tiếp theo chứa data-testid hoặc div con)
+                var sibling = el.nextElementSibling;
+                // Duyệt qua 3 elements tiếp theo (columns row + maybe more)
+                for(var i=0; i<3 && sibling; i++){{
+                    sibling.style.outline = '3px solid #FFD700';
+                    sibling.style.borderRadius = '12px';
+                    sibling.style.animation = 'rowBlink 0.7s ease-in-out 6';
+                    (function(s){{
+                        setTimeout(function(){{ s.style.outline=''; s.style.animation=''; s.style.borderRadius=''; }}, 5000);
+                    }})(sibling);
+                    sibling = sibling.nextElementSibling;
                 }}
             }}
         </script>""", height=0)
