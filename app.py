@@ -160,6 +160,9 @@ user_data = load_data(st.session_state.username)
 vocab_data = get_vocab()
 display_name = st.session_state.get("display_name", st.session_state.username)
 
+# --- Anchor đầu trang ---
+st.markdown("<div id='page-top'></div>", unsafe_allow_html=True)
+
 # --- Đồng hồ VN / KR ---
 vn_tz = timezone(timedelta(hours=7))
 kr_tz = timezone(timedelta(hours=9))
@@ -307,11 +310,9 @@ btn.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10001;backgro
 btn.onmouseover = function(){this.style.transform='scale(1.15)'};
 btn.onmouseout = function(){this.style.transform='scale(1)'};
 btn.onclick = function(){
-    var d = pdoc;
-    var el = d.querySelector('section.main') || d.querySelector('.main') || d.querySelector('[data-testid="stAppViewContainer"]');
-    if(el) el.scrollTo({top:0,behavior:'smooth'});
-    d.documentElement.scrollTo({top:0,behavior:'smooth'});
-    parent.scrollTo({top:0,behavior:'smooth'});
+    var anchor = pdoc.getElementById('page-top');
+    if(anchor){ anchor.scrollIntoView({behavior:'smooth'}); }
+    else { parent.scrollTo(0,0); }
 };
 pdoc.body.appendChild(btn);
 </script>
