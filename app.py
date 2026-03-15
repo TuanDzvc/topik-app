@@ -309,7 +309,7 @@ for idx, tab in enumerate(tabs):
 
             if current_input:
                 if current_input.strip() == word["kr"]:
-                    c6.success("CHUẨN ✅")
+                    c6.success("🔥 CHUẨN CMNR")
                 else:
                     c6.error("SAI ❌")
 
@@ -323,12 +323,27 @@ for idx, tab in enumerate(tabs):
         else:
             st.markdown(f"### 🎉 Hết danh sách {ten}!")
 
-    # --- Scroll JS khi bấm "Xem học đến đâu" ---
+    # --- Scroll JS khi bấm "Xem học đến đâu" + highlight nhấp nháy ---
     if scroll_clicked and last_stt > 0:
-        target_page = (last_stt - 1) // WORDS_PER_PAGE + 1
-        components.html(f"""<script>
+        components.html(f"""
+        <style>
+        @keyframes blink-border {{ 0%,100%{{box-shadow:0 0 0px transparent}} 50%{{box-shadow:0 0 15px 5px #FFD700}} }}
+        </style>
+        <script>
             var el = window.parent.document.getElementById('word_{ten}_{last_stt}');
-            if (el) el.scrollIntoView({{behavior:'smooth', block:'center'}});
+            if (el) {{
+                el.scrollIntoView({{behavior:'smooth', block:'center'}});
+                el.style.animation = 'blink-border 0.6s ease-in-out 5';
+                var style = window.parent.document.createElement('style');
+                style.textContent = '@keyframes blink-border {{ 0%,100%{{box-shadow:0 0 0px transparent}} 50%{{box-shadow:0 0 20px 8px #FFD700}} }}';
+                window.parent.document.head.appendChild(style);
+                var row = el.nextElementSibling;
+                if(row) {{
+                    row.style.animation = 'blink-border 0.6s ease-in-out 5';
+                    row.style.borderRadius = '10px';
+                    setTimeout(function(){{ row.style.animation=''; }}, 4000);
+                }}
+            }}
         </script>""", height=0)
 
 # --- Cập nhật tiến độ real-time (sau khi xử lý hết từ) ---
@@ -351,19 +366,39 @@ components.html("""
 .bnav button{background:linear-gradient(135deg,#e67e22,#f39c12);color:#fff;border:none;padding:10px 28px;border-radius:25px;font-weight:900;font-size:14px;cursor:pointer;transition:all .3s}
 .bnav button:hover{background:linear-gradient(135deg,#d35400,#e67e22);transform:scale(1.08)}
 </style>
-<div class="bnav">
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[0].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📗 Cấp 3</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[1].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📘 Cấp 4</button>
-    <button onclick="parent.document.querySelectorAll('button[data-baseweb=\\'tab\\']')[2].click();parent.document.querySelector('.main').scrollTo({top:0,behavior:'smooth'})">📕 Cấp 5</button>
-</div>
+<div class="bnav" id="bnavBar"></div>
 <script>
 var pdoc = parent.document;
+var allTabs = pdoc.querySelectorAll('button[data-baseweb="tab"]');
+var activeIdx = -1;
+for(var i=0;i<allTabs.length;i++){
+    if(allTabs[i].getAttribute('aria-selected')==='true') activeIdx=i;
+}
+var labels = ['\ud83d\udcd7 C\u1ea5p 3','\ud83d\udcd8 C\u1ea5p 4','\ud83d\udcd5 C\u1ea5p 5'];
+var bar = document.getElementById('bnavBar');
+for(var i=0;i<3;i++){
+    if(i===activeIdx) continue;
+    var b = document.createElement('button');
+    b.textContent = labels[i];
+    (function(idx){
+        b.onclick = function(){
+            var t = pdoc.querySelectorAll('button[data-baseweb="tab"]');
+            if(t[idx]) t[idx].click();
+            setTimeout(function(){
+                var anchor = pdoc.getElementById('page-top');
+                if(anchor) anchor.scrollIntoView({behavior:'smooth'});
+                else parent.scrollTo(0,0);
+            }, 200);
+        };
+    })(i);
+    bar.appendChild(b);
+}
 var old = pdoc.getElementById('topBtnFixed');
 if(old) old.remove();
 var btn = pdoc.createElement('button');
 btn.id = 'topBtnFixed';
-btn.innerHTML = '🔝';
-btn.title = 'Lên đầu trang';
+btn.innerHTML = '\ud83d\udd1d';
+btn.title = 'L\u00ean \u0111\u1ea7u trang';
 btn.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10001;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;width:55px;height:55px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);transition:all 0.3s;';
 btn.onmouseover = function(){this.style.transform='scale(1.15)'};
 btn.onmouseout = function(){this.style.transform='scale(1)'};
