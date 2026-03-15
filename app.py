@@ -216,7 +216,7 @@ progress_area = st.empty()
 st.divider()
 
 # --- Giọng đọc ---
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_audio_bytes(text, voice):
     async def _gen():
         comm = edge_tts.Communicate(text, voice)
@@ -225,7 +225,10 @@ def get_audio_bytes(text, voice):
             if chunk["type"] == "audio":
                 data.extend(chunk["data"])
         return bytes(data)
-    return asyncio.run(_gen())
+    result = asyncio.run(_gen())
+    if not result or len(result) < 100:
+        raise ValueError("Audio generation failed")
+    return result
 
 voice_opt = st.radio("Giọng đọc 🎧:", ("👩 Nữ (SunHi)", "👨 Nam (InJoon)"), horizontal=True)
 voice_code = "ko-KR-SunHiNeural" if "Nữ" in voice_opt else "ko-KR-InJoonNeural"
@@ -286,8 +289,14 @@ for idx, tab in enumerate(tabs):
             c2.markdown(f"<div class='korean-text'>{word['kr']}</div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='center-text'>{word['vn']}</div>", unsafe_allow_html=True)
 
-            audio_bytes = get_audio_bytes(word["kr"], voice_code)
-            c4.audio(audio_bytes, format='audio/mp3')
+            try:
+                audio_bytes = get_audio_bytes(word["kr"], voice_code)
+                if audio_bytes and len(audio_bytes) > 100:
+                    c4.audio(audio_bytes, format='audio/mp3')
+                else:
+                    c4.write("🔇")
+            except:
+                c4.write("🔇")
 
             saved = user_data.get(word_key, "")
             current_input = c5.text_input("Gõ lại", value=saved, key=f"input_{word_key}", label_visibility="collapsed", placeholder="Điền từ vựng tiếng Hàn...")
