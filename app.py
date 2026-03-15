@@ -282,7 +282,15 @@ for idx, tab in enumerate(tabs):
         # --- Danh sách từ (chỉ hiện show_count từ) ---
         for word in current_vocab[:show_count]:
             word_key = f"{ten}_{word['stt']}"
-            st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
+            is_target = scroll_clicked and word['stt'] == last_stt
+
+            # Highlight hàng cuối đã học
+            if is_target:
+                st.markdown(f"""<div id='word_{word_key}' style='border:3px solid #FFD700; border-radius:12px; padding:8px; background:rgba(255,215,0,0.15); margin:4px 0;'>
+                    <span style='color:#FFD700; font-weight:bold;'>👉 Bạn đang học đến đây!</span>
+                </div>""", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div id='word_{word_key}'></div>", unsafe_allow_html=True)
 
             c1, c2, c3, c4, c5, c6 = st.columns([1, 1.5, 2, 2.5, 3, 2])
             c1.markdown(f"<div class='center-text'>{word['stt']}</div>", unsafe_allow_html=True)
@@ -323,37 +331,11 @@ for idx, tab in enumerate(tabs):
         else:
             st.markdown(f"### 🎉 Hết danh sách {ten}!")
 
-    # --- Scroll JS khi bấm "Xem học đến đâu" + highlight nhấp nháy ---
+    # --- Scroll JS khi bấm "Xem học đến đâu" ---
     if scroll_clicked and last_stt > 0:
-        components.html(f"""
-        <script>
-            var pdoc = window.parent.document;
-            // CSS nhấp nháy
-            if(!pdoc.getElementById('hlCSS')){{
-                var s = pdoc.createElement('style');
-                s.id = 'hlCSS';
-                s.textContent = '@keyframes hl {{ 0%,100%{{background:transparent}} 50%{{background:rgba(255,215,0,0.3)}} }} .word-hl {{animation:hl 0.5s ease 8 !important; outline:3px solid #FFD700 !important; border-radius:10px !important;}}';
-                pdoc.head.appendChild(s);
-            }}
-            // Xóa cũ
-            pdoc.querySelectorAll('.word-hl').forEach(function(e){{e.classList.remove('word-hl')}});
-            
-            var el = pdoc.getElementById('word_{ten}_{last_stt}');
-            if(el){{
-                // Thử nhiều cấp parent để tìm container
-                var p = el;
-                for(var u=0; u<5; u++) {{ if(p.parentElement) p = p.parentElement; }}
-                // p giờ là container cao nhất, tìm sibling
-                var row = el.parentElement.parentElement.nextElementSibling;
-                if(!row) row = el.parentElement.nextElementSibling;
-                if(row){{
-                    row.classList.add('word-hl');
-                    row.scrollIntoView({{behavior:'smooth', block:'center'}});
-                    setTimeout(function(){{row.classList.remove('word-hl')}}, 5000);
-                }} else {{
-                    el.scrollIntoView({{behavior:'smooth', block:'center'}});
-                }}
-            }}
+        components.html(f"""<script>
+            var el = window.parent.document.getElementById('word_{ten}_{last_stt}');
+            if(el) el.scrollIntoView({{behavior:'smooth', block:'center'}});
         </script>""", height=0)
 
 # --- Cập nhật tiến độ real-time (sau khi xử lý hết từ) ---
